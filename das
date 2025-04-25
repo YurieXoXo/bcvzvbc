@@ -1,6 +1,3 @@
--- AutoParry with Skin Changer and Hit Effects Integration
-
--- Load UI Library
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Jxereas/UI-Libraries/main/cerberus.lua"))()
 local window = Library.new("Yamaz")
 window:LockScreenBoundaries(true)
@@ -38,18 +35,10 @@ visualSection:Toggle("Hit Effects", function(val)
 end)
 
 local effectsDropdown = visualSection:Dropdown("Effects")
-effectsDropdown:Toggle("Halo ", function()
-    selectedEffectId = "18865989002"
-end)
-effectsDropdown:Toggle("UwU ", function()
-    selectedEffectId = "8679659744"
-end)
-effectsDropdown:Toggle("lazer ", function()
-    selectedEffectId = "1624609598"
-end)
-effectsDropdown:Toggle("chicken ", function()
-    selectedEffectId = "4510529019"
-end)
+effectsDropdown:Toggle("Halo ", function() selectedEffectId = "18865989002" end)
+effectsDropdown:Toggle("UwU ", function() selectedEffectId = "8679659744" end)
+effectsDropdown:Toggle("lazer ", function() selectedEffectId = "1624609598" end)
+effectsDropdown:Toggle("chicken ", function() selectedEffectId = "4510529019" end)
 
 -- Bind G key for spam toggle
 local UserInputService = game:GetService("UserInputService")
@@ -102,9 +91,7 @@ radiusPart.Parent = Workspace
 radiusPart.Orientation = Vector3.new(0, 0, 90)
 
 -- Utility & State
-local timeAccumulator = 0
-local lastParryTime = 0
-local parryDelay = 0.3
+local parriedThisHighlight = false
 
 local function getBall()
     for _, b in ipairs(ballsFolder:GetChildren()) do
@@ -222,8 +209,7 @@ RunService.RenderStepped:Connect(function(delta)
         end
         local vel, dir = ball.AssemblyLinearVelocity, ball.AssemblyLinearVelocity.Magnitude > 0 and ball.AssemblyLinearVelocity.Unit or Vector3.new(1,0,0)
         endAttachment.WorldPosition = ball.Position + dir * 150
-        timeAccumulator += delta
-        local pulse = math.abs(math.sin(timeAccumulator * 3)) * 0.1
+        local pulse = math.abs(math.sin(tick() * 3)) * 0.1
         beam.Width0, beam.Width1 = 2 + pulse, 2 + pulse
         beam.Enabled = true
     else
@@ -241,14 +227,15 @@ RunService.RenderStepped:Connect(function(delta)
     -- AutoParry
     if autoParryEnabled then
         local hasHighlight = character:FindFirstChildWhichIsA("Highlight")
-        if distance <= adjustedRadius and hasHighlight then
-            local now = tick()
-            if now - lastParryTime >= parryDelay then
-                lastParryTime = now
+        if hasHighlight then
+            if distance <= adjustedRadius and not parriedThisHighlight then
+                parriedThisHighlight = true
                 VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game)
                 VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.F, false, game)
                 playEffect()
             end
+        else
+            parriedThisHighlight = false
         end
     end
 
